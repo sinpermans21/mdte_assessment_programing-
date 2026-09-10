@@ -22,8 +22,8 @@ class WackamoleWindow(QMainWindow):
         self.point_label.setStyleSheet("color: #ffffff; font-size: 20px; font-weight: thin;")
  
         #randomly select a mole position
-        self.mole_row = random.randint(0, {number_of_rows_cols-1})
-        self.mole_col = random.randint(0, {number_of_rows_cols-1})
+        self.mole_row = random.randint(0, number_of_rows_cols-1)
+        self.mole_col = random.randint(0, number_of_rows_cols-1)
 
         
         grid_layout = QGridLayout()
@@ -65,8 +65,8 @@ class WackamoleWindow(QMainWindow):
 
             self.buttons[self.mole_row][self.mole_col].setText("")
 
-            new_row = random.randint(0, {number_of_rows_cols-1})
-            new_col = random.randint(0, {number_of_rows_cols-1})
+            new_row = random.randint(0, number_of_rows_cols-1)
+            new_col = random.randint(0, number_of_rows_cols-1)
 
             self.mole_row = new_row
             self.mole_col = new_col
@@ -77,5 +77,4 @@ class WackamoleWindow(QMainWindow):
 app = QApplication(sys.argv)
 window = WackamoleWindow()
 window.show()
-sys.exit(app.exec)
-
+sys.exit(app.exec())
