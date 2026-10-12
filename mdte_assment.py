@@ -2,11 +2,11 @@
 
 import sys
 import random
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QMessageBox, QFileDialog, QLabel
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QMessageBox, QFileDialog, QVBoxLayout, QLabel
 
-number_of_rows_cols = 5
+number_of_rows_cols = 4
 
-
+#this makes the window for the game  
 class WackamoleWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -14,9 +14,11 @@ class WackamoleWindow(QMainWindow):
         self.setWindowTitle("Wack-a-Mole")
         self.resize(600, 600)
         self.setStyleSheet("background-color: #59d119;")
+        self.layout = QVBoxLayout()
 
         self.buttons = []
         self.point = 0
+        self.game_over = False 
 
         self.point_label = QLabel("Points: 0")
         self.point_label.setStyleSheet("color: #ffffff; font-size: 20px; font-weight: thin;")
@@ -28,7 +30,7 @@ class WackamoleWindow(QMainWindow):
         
         grid_layout = QGridLayout()
         grid_layout.setSpacing(10)
-        grid_layout.addWidget(self.point_label,0,3)
+        grid_layout.addWidget(self.point_label, 0, number_of_rows_cols - 1)
 
         for row in range(number_of_rows_cols):
             row_buttons = []
@@ -54,11 +56,13 @@ class WackamoleWindow(QMainWindow):
         
 
     def button_clicked(self, row, col):
+        if self.game_over:
+            return 
         
         if row == self.mole_row and col == self.mole_col:
 
             #add point or smt
-            self.point +=1
+            self.point += 1
 
             #updates points 
             self.point_label.setText(f"Points: {self.point}")
@@ -72,6 +76,19 @@ class WackamoleWindow(QMainWindow):
             self.mole_col = new_col
 
             self.buttons[self.mole_row][self.mole_col].setText("Mole")
+
+        else: 
+            self.end_game()
+
+    def end_game(self):
+        self.game_over = True
+
+        for row_buttons in self.buttons:
+            for button in row_buttons:
+                button.setEnabled(False)
+
+        QMessageBox.information(self, "Game Over", f"You missed the mole LOSER! \nYour final score is: {self.point}")
+        self.close()
 
 
 app = QApplication(sys.argv)
