@@ -2,35 +2,47 @@
 
 import sys
 import random
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QMessageBox, QFileDialog, QVBoxLayout, QLabel
+from PyQt6.QtCore import QUrl, QTimer
+from pathlib import Path
+from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QMessageBox, QVBoxLayout, QLabel, QDialog, QSpinBox
 
 number_of_rows_cols = 4
 
 #this makes the window for the game  
 class WackamoleWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, duration):
         super().__init__()
+
+        self.audio_output = QAudioOutput()
+        self.audio_output.setVolume(0.5)
+        self.music_player = QMediaPlayer()
+        self.music_player.setAudioOutput(self.audio_output)
+        music_file = Path(__file__).resolve().parent / "sounds" / "monume-retro-arcade-game-music-577980.mp3    "
+        self.music_player.setSource(QUrl.fromLocalFile(str(music_file)))
+        self.music_player.play()
 
         self.setWindowTitle("Wack-a-Mole")
         self.resize(600, 600)
         self.setStyleSheet("background-color: #59d119;")
         self.layout = QVBoxLayout()
+        self.counter = duration
+        self.label = QLabel(f"Time left: {self.counter} seconds")
+        self.layout.addWidget(self.label)
 
         self.buttons = []
         self.point = 0
-        self.game_over = False 
+        self.game_over = False
 
         self.point_label = QLabel("Points: 0")
         self.point_label.setStyleSheet("color: #ffffff; font-size: 20px; font-weight: thin;")
- 
-        #randomly select a mole position
-        self.mole_row = random.randint(0, number_of_rows_cols-1)
-        self.mole_col = random.randint(0, number_of_rows_cols-1)
+        self.layout.addWidget(self.point_label)
 
-        
+        self.mole_row = random.randint(0, number_of_rows_cols - 1)
+        self.mole_col = random.randint(0, number_of_rows_cols - 1)
+
         grid_layout = QGridLayout()
         grid_layout.setSpacing(10)
-        grid_layout.addWidget(self.point_label, 0, number_of_rows_cols - 1)
 
         for row in range(number_of_rows_cols):
             row_buttons = []
@@ -45,15 +57,24 @@ class WackamoleWindow(QMainWindow):
                 row_buttons.append(button)
             self.buttons.append(row_buttons)
 
-        
-        central_widget = QWidget()
-        central_widget.setLayout(grid_layout)
-        self.setCentralWidget(central_widget)
+        grid_widget = QWidget()
+        grid_widget.setLayout(grid_layout)
+        self.layout.addWidget(grid_widget)
 
-        
-        #shows the mole 
-        self.buttons[self.mole_row][self.mole_col].setText("Mole ")
-        
+        container = QWidget()
+        container.setLayout(self.layout)
+        self.setCentralWidget(container)
+        self.buttons[self.mole_row][self.mole_col].setText("Mole")
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_timer)
+        self.timer.start(1000)
+
+    def update_timer(self):
+        self.counter -= 1
+        self.label.setText(f"Time left: {self.counter} seconds")
+        if self.counter == 0:
+            self.end_game()
 
     def button_clicked(self, row, col):
         if self.game_over:
@@ -91,7 +112,37 @@ class WackamoleWindow(QMainWindow):
         self.close()
 
 
-app = QApplication(sys.argv)
-window = WackamoleWindow()
-window.show()
-sys.exit(app.exec())
+class StartMenu(QDialog):
+    def __init__(self):
+        super().__init__()  
+        self.setWindowTitle("Wack-a-Mole")
+        self.duration = None
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Enter game length in seconds:"))
+        self.duration_input = QSpinBox()
+        self.duration_input.setRange(15, 60)
+        self.duration_input.setValue(30)
+        layout.addWidget(self.duration_input)
+
+        start_button = QPushButton("Start Game")
+        start_button.clicked.connect(self.choose_duration)
+        layout.addWidget(start_button)
+
+        self.setLayout(layout)
+
+    def choose_duration(self):
+        self.duration = self.duration_input.value()
+        self.accept()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    menu = StartMenu()
+
+    if menu.exec() == QDialog.DialogCode.Accepted and menu.duration is not None:
+        window = WackamoleWindow(menu.duration)
+        window.show()
+        sys.exit(app.exec())
+
+    sys.exit(0)
