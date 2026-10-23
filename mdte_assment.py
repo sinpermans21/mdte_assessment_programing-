@@ -102,14 +102,31 @@ class WackamoleWindow(QMainWindow):
             self.end_game()
 
     def end_game(self):
+        if self.game_over:
+            return
+
         self.game_over = True
+        self.timer.stop()
 
         for row_buttons in self.buttons:
             for button in row_buttons:
                 button.setEnabled(False)
 
+        score_file = Path(__file__).resolve().parent / "score.txt"
+        try:
+            with score_file.open("a", encoding="utf-8") as file:
+                file.write(f"Score: {self.point}\n")
+        except OSError as error:
+            QMessageBox.warning(
+                self,
+                "Could not save score",
+                f"Your score could not be saved to {score_file}.\n{error}",
+            )
+
         QMessageBox.information(self, "Game Over", f"You missed the mole LOSER! \nYour final score is: {self.point}")
         self.close()
+
+        
 
 
 class StartMenu(QDialog):
